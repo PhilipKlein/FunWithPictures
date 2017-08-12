@@ -3,7 +3,7 @@ from scipy import misc
 
 
 def load_image( file_name ):
-    image = imread(file_name)
+    image = misc.imread(file_name)
     return image
 
 
