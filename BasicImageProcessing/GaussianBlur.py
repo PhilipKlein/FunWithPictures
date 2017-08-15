@@ -20,6 +20,7 @@ def _generate_mask(sigma, kernel_size):
             x = fabs(center - i)
             y = fabs(center - j)
             gf[i][j] = (1/(2*PI*sigma*sigma))*pow(EULER, -((x*x + y*y) / (2*sigma)))
+    # normalization
     sum_of_all_values = sum(sum(gf))
     for i in range(len(gf)):
         for j in range(len(gf[i])):
@@ -29,9 +30,8 @@ def _generate_mask(sigma, kernel_size):
 
 def apply_gaussian_blur(img, sigma=1, kernel_size=5):
     """ Applies gaussian blur
-        sigma: determines influence of outside pixel
-        kernel_size: how many pixels outside get calculated, 
-                     CARE: High values decrease performance repidely,
+        sigma: determines influence of outside pixel (bluriness)
+        kernel_size: CARE: High values decrease performance repidely,
         TODO: parallelize for loop
     """
     if kernel_size % 2 != 1: # if kernel_size even return error
@@ -40,17 +40,16 @@ def apply_gaussian_blur(img, sigma=1, kernel_size=5):
     center = floor(kernel_size/2)
     gf = _generate_mask(sigma, kernel_size)
 
-    blurred_image = np.copy(image)
-    print(image.shape)
+    blurred_image = np.empty_like(image)
     x_len = image.shape[0]
     y_len = image.shape[1]
     for i in range(0, len(img)):
         for j in range(0, len(img[i])):
-            for color in range(len(img[i][j])):
-                temp = 0
+            for color in range(len(img[i][j])): #check first if image is rgb or bw
+                blurred_value = 0
                 for x_dis in range(-center, center + 1):
                     for y_dis in range(-center, center + 1):
-                        # Handle the edge case by mirroring
+                        # Handle the edge case by mirroring, could consider multiple loops?
                         x_pix = i+x_dis
                         if (x_pix < 0):
                             x_pix = abs(x_pix)
@@ -63,9 +62,8 @@ def apply_gaussian_blur(img, sigma=1, kernel_size=5):
                         elif (y_pix >= y_len):
                             y_pix -= y_pix-y_len
                             y_pix -= 1
-                        temp += image[x_pix][y_pix][color]*gf[x_dis+center][y_dis + center]
-                temp = np.ceil(temp) # do rounding correctly
-                blurred_image[i][j][color] = np.uint8(temp)
+                        blurred_value += image[x_pix][y_pix][color]*gf[x_dis+center][y_dis + center]
+                blurred_image[i][j][color] = np.uint8(blurred_value)
 
     
     return blurred_image
